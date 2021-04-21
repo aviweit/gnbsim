@@ -307,10 +307,10 @@ func (gnb *GNB) MakePDUSessionResourceSetupResponse(ue *nas.UE) (pdu []byte) {
 
 	v := encProtocolIEContainer(3)
 
-	tmp := gnb.encAMFUENGAPID(c, ignore)
+	tmp := gnb.encAMFUENGAPID(c)
 	v = append(v, tmp...)
 
-	tmp = gnb.encRANUENGAPID(ignore)
+	tmp = gnb.encRANUENGAPID()
 	v = append(v, tmp...)
 
 	tmp = gnb.encPDUSessionResourceSetupListSURes(c)
@@ -385,10 +385,10 @@ func (gnb *GNB) MakeInitialContextSetupResponse(ue *nas.UE) (pdu []byte) {
 
 	v := encProtocolIEContainer(2)
 
-	tmp := gnb.encAMFUENGAPID(c, ignore)
+	tmp := gnb.encAMFUENGAPID(c)
 	v = append(v, tmp...)
 
-	tmp = gnb.encRANUENGAPID(ignore)
+	tmp = gnb.encRANUENGAPID()
 	v = append(v, tmp...)
 
 	bf, _ := per.EncLengthDeterminant(len(v), 0, 0)
@@ -426,7 +426,7 @@ func (gnb *GNB) MakeInitialUEMessage(ue *nas.UE) (pdu []byte) {
 
 	v := encProtocolIEContainer(5)
 
-	tmp := gnb.encRANUENGAPID(reject)
+	tmp := gnb.encRANUENGAPID()
 	v = append(v, tmp...)
 
 	tmp = gnb.encNASPDU(c)
@@ -493,10 +493,10 @@ func (gnb *GNB) MakeUplinkNASTransport(ue *nas.UE) (pdu []byte) {
 
 	v := encProtocolIEContainer(4)
 
-	tmp := gnb.encAMFUENGAPID(c, reject)
+	tmp := gnb.encAMFUENGAPID(c)
 	v = append(v, tmp...)
 
-	tmp = gnb.encRANUENGAPID(reject)
+	tmp = gnb.encRANUENGAPID()
 	v = append(v, tmp...)
 
 	tmp = gnb.encNASPDU(c)
@@ -713,7 +713,7 @@ func (gnb *GNB) decProtocolIE(c *Camper, pdu *[]byte) (c2 *Camper, err error) {
 
 	readPduByte(pdu) // skip ciritcality
 
-	length, _ := per.DecLengthDeterminant(pdu, 0)
+	length := int(readPduByte(pdu))
 	gnb.dprint("IE length: %d", length)
 	gnb.indent++
 
@@ -1528,9 +1528,9 @@ func (gnb *GNB) encRRCEstablishmentCause(cause uint) (v []byte, err error) {
 /*
 AMF-UE-NGAP-ID ::= INTEGER (0..1099511627775) // 20^40 -1
 */
-func (gnb *GNB) encAMFUENGAPID(c *Camper, crit uint) (v []byte) {
+func (gnb *GNB) encAMFUENGAPID(c *Camper) (v []byte) {
 
-	head, _ := encProtocolIE(idAMFUENGAPID, crit)
+	head, _ := encProtocolIE(idAMFUENGAPID, reject)
 	_, v, _ = per.EncInteger(int64(c.AmfId), 0, 4294967295, false)
 	bf, _ := per.EncLengthDeterminant(len(v), 0, 0)
 	head = append(head, bf.Value...)
@@ -1560,9 +1560,9 @@ func (gnb *GNB) decAMFUENGAPID(pdu *[]byte, length int) (c *Camper, err error) {
 /*
 RAN-UE-NGAP-ID ::= INTEGER (0..4294967295)
 */
-func (gnb *GNB) encRANUENGAPID(crit uint) (v []byte) {
+func (gnb *GNB) encRANUENGAPID() (v []byte) {
 
-	head, _ := encProtocolIE(idRANUENGAPID, crit)
+	head, _ := encProtocolIE(idRANUENGAPID, reject)
 
 	_, v, _ = per.EncInteger(int64(gnb.RANUENGAPID), 0, 4294967295, false)
 	bf, _ := per.EncLengthDeterminant(len(v), 0, 0)

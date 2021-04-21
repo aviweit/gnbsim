@@ -1,6 +1,7 @@
 all: build
 
 build:
+	make -C gnb-gw build
 	make -C example build
 	make -C cmd build
 
@@ -22,4 +23,5 @@ clean:
 	make -C encoding/nas clean
 	make -C encoding/ngap clean
 	make -C example clean
+	make -C gnb-gw clean
 	make -C cmd clean

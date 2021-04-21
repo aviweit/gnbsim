@@ -483,9 +483,7 @@ func (ue *UE) decAuthenticationRequest(pdu *[]byte) {
 	*/
 
 	if reflect.DeepEqual(ue.AuthParam.mac, m.MACA) == false {
-		ue.dprinti("received and calculated MAC values do not match.")
-		ue.dprinti("received  : %x", ue.AuthParam.mac)
-		ue.dprinti("calculated: %x", m.MACA)
+		ue.dprinti("received and calculated MAC values do not match.\n")
 		ue.indent = orig
 		// need response for error.
 		return
@@ -1709,11 +1707,7 @@ var pduSessionTypeStr = map[byte]string{
 }
 
 func (ue *UE) encPDUSessionType() (pdu []byte) {
-	/*
-	 * free5gc v3.0.5 doesn't support PDUSessionIPv4v6?
-	 */
-	//pdu = []byte{byte((ieiPDUSessionType << 4) | PDUSessionIPv4v6)}
-	pdu = []byte{byte((ieiPDUSessionType << 4) | PDUSessionIPv4)}
+	pdu = []byte{byte((ieiPDUSessionType << 4) | PDUSessionIPv4v6)}
 	return
 }
 
