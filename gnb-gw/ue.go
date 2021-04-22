@@ -9,8 +9,8 @@ func (t *testSession) registerUE(ue *nas.UE) {
 	log.Printf("registerUE function called for %v",ue)
 
 	log.Printf("send registration request -->")
-	pdu := ue.MakeRegistrationRequest()
-	t.gnb.RecvfromUE(ue,&pdu)
+	pdu := ue.MakeRegistrationRequest()   // set MMRegisteredInitiated
+	t.gnb.RecvfromUE(ue,&pdu) // simulate receive?
 
 	log.Printf("send initial UE message -->")
 	buf := t.gnb.MakeInitialUEMessage(ue)
@@ -83,7 +83,7 @@ func (t *testSession) initUE() {
 	gnb := t.gnb
 	tmp := t.gnb.UE
 	ue := &tmp
-	ue.PowerON()
+	ue.PowerON() // set MMDeregistared
 	ue.SetDebugLevel(1)
 	gnb.CampIn(ue)
 

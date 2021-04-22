@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"context"
+//	"context"
 	"syscall"
 )
 
@@ -12,18 +12,20 @@ func main() {
 	log.SetPrefix("[5g-gateway]")
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
+	log.Printf("*** RAN init and UE register ***")
+
 	t := initRAN()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+//	ctx, cancel := context.WithCancel(context.Background())
+//	defer cancel()
 
 	sigCh := make(chan os.Signal, 1)
 	// signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGCONT)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
 	log.Printf("run user plane")
-	t.updateNGAP("gnb.json")
-	t.initUE()
+	t.updateNGAP("gnb.json") // add UE structure info
+	t.initUE() // **does not send message**
 
     // register all UEs
 	gnb := t.gnb
@@ -32,29 +34,29 @@ func main() {
 		t.registerUE(ue)
 	}
 
-	for _, c := range gnb.Camper {
-		ue := c.UE
-		t.establishPDUSession(ue)
-	}
-	log.Printf("before user plane setup")
+//	for _, c := range gnb.Camper {
+//		ue := c.UE
+//		t.establishPDUSession(ue)
+//	}
+//	log.Printf("before user plane setup")
 
-	fatalCh := make(chan error, 1)
+//	fatalCh := make(chan error, 1)
 
-	for _, c := range gnb.Camper {
-		go func() {
-			if err := setupUserPlane(t, ctx,c); err != nil {
-				fatalCh <- err
-			}
-		}()
-	}
+//	for _, c := range gnb.Camper {
+//		go func() {
+//			if err := setupUserPlane(t, ctx,c); err != nil {
+//				fatalCh <- err
+//			}
+//		}()
+//	}
 
-	for {
-		select {
-		case err := <-fatalCh:
-			log.Printf("FATAL: %s", err)
-			return
-		}
-	}
+//	for {
+//		select {
+//		case err := <-fatalCh:
+//			log.Printf("FATAL: %s", err)
+//			return
+//		}
+//	}
 
 	return
 }
