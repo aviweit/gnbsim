@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"context"
+//	"context"
 	"syscall"
 )
 
@@ -12,10 +12,12 @@ func main() {
 	log.SetPrefix("[5g-gateway]")
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
+	log.Printf("*** UE establishPDUSession only ***")
+
 	t := initRAN()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+//	ctx, cancel := context.WithCancel(context.Background())
+//	defer cancel()
 
 	sigCh := make(chan os.Signal, 1)
 	// signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGCONT)
@@ -36,17 +38,17 @@ func main() {
 		ue := c.UE
 		t.establishPDUSession(ue)
 	}
-	log.Printf("before user plane setup")
+//	log.Printf("before user plane setup")
 
 	fatalCh := make(chan error, 1)
 
-	for _, c := range gnb.Camper {
-		go func() {
-			if err := setupUserPlane(t, ctx,c); err != nil {
-				fatalCh <- err
-			}
-		}()
-	}
+//	for _, c := range gnb.Camper {
+//		go func() {
+//			if err := setupUserPlane(t, ctx,c); err != nil {
+//				fatalCh <- err
+//			}
+//		}()
+//	}
 
 	for {
 		select {
