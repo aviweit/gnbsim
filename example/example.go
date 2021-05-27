@@ -324,15 +324,15 @@ func addRoute(tun *netlink.Tuntap) (err error) {
 //		t.runUPlane(ctx, c, gtpConn, tun)
 //	}
 //	return
-}
+//}
 
 func runUPlane(gnb *ngap.GNB, ue *nas.UE, ctx context.Context,
 	gtpConn *net.UDPConn, tun *netlink.Tuntap) {
 
-	c.GTPu = gtp.NewGTP(gnb.GTPuTEID, gnb.Recv.GTPuPeerTEID)
-	gtpu := c.GTPu
+	// c.GTPu = gtp.NewGTP(gnb.GTPuTEID, gnb.Recv.GTPuPeerTEID)
+	gtpu := gtp.NewGTP(gnb.GTPuTEID, gnb.Recv.GTPuPeerTEID) // c.GTPu
 	gtpu.SetExtensionHeader(true)
-	gtpu.SetQosFlowID(c.QosFlowID)
+	//gtpu.SetQosFlowID(c.QosFlowID)
 
 	log.Printf("GTP-U Peer TEID: %v\n", gnb.Recv.GTPuPeerTEID)
 	log.Printf("GTP-U Local TEID: %v\n", gnb.GTPuTEID)
@@ -351,8 +351,8 @@ func runUPlane(gnb *ngap.GNB, ue *nas.UE, ctx context.Context,
 		return
 	}
 
-	go t.decap(c, gtpConn, tun)
-	go t.encap(c, gtpConn, tun)
+	go decap(gtpu, gtpConn, tun)
+	go encap(gnb, gtpu, gtpConn, tun)
 	// t.doUPlane(ctx, c)
 
 	/*
@@ -435,7 +435,7 @@ func addRuleLocal(ip net.IP) (err error) {
 	return
 }
 
-func (t *testSession) decap(c *ngap.Camper, gtpConn *net.UDPConn, tun *netlink.Tuntap) {
+func decap(gtpu *gtp.GTP, gtpConn *net.UDPConn, tun *netlink.Tuntap) {
 
 	fd := tun.Fds[0]
 
@@ -446,7 +446,7 @@ func (t *testSession) decap(c *ngap.Camper, gtpConn *net.UDPConn, tun *netlink.T
 			log.Fatalln(err)
 			return
 		}
-		payload := c.GTPu.Decap(buf[:n])
+		payload := gtpu.Decap(buf[:n])
 		//fmt.Printf("decap: %x\n", payload)
 
 		_, err = fd.Write(payload)
@@ -457,11 +457,11 @@ func (t *testSession) decap(c *ngap.Camper, gtpConn *net.UDPConn, tun *netlink.T
 	}
 }
 
-func (t *testSession) encap(c *ngap.Camper, gtpConn *net.UDPConn, tun *netlink.Tuntap) {
+func encap(gnb *ngap.GNB, gtpu *gtp.GTP, gtpConn *net.UDPConn, tun *netlink.Tuntap) {
 
 	fd := tun.Fds[0]
 	paddr := &net.UDPAddr{
-		IP:   t.gnb.Recv.GTPuPeerAddr,
+		IP:   gnb.Recv.GTPuPeerAddr,
 		Port: gtp.Port,
 	}
 
@@ -472,7 +472,7 @@ func (t *testSession) encap(c *ngap.Camper, gtpConn *net.UDPConn, tun *netlink.T
 			log.Fatalln(err)
 			return
 		}
-		payload := c.GTPu.Encap(buf[:n])
+		payload := gtpu.Encap(buf[:n])
 
 		_, err = gtpConn.WriteToUDP(payload, paddr)
 		if err != nil {
@@ -540,8 +540,8 @@ func main() {
 	gnb.GTPuIFname = "gtp-gnb"
 	gnb.GTPuTEID = 17
 	gnb.Recv.GTPuPeerTEID = 1
-	gnb.GTPuLocalAddr = "192.168.10.2"  // 2nd address in up
-	gnb.Recv.GTPuPeerAddr = net.IPv4(192, 168, 10, 1) // 1st address in up
+	gnb.GTPuLocalAddr = "192.168.10.11"  // 2nd address in up
+	gnb.Recv.GTPuPeerAddr = net.IPv4(192, 168, 10, 10) // ufp address in up
 
 
 	// usual testing
@@ -564,7 +564,7 @@ func main() {
 
 	time.Sleep(time.Second * 1)
 
-	t.deregistrateAll()
+	//t.deregistrateAll()
 	time.Sleep(time.Second * 1)
 
 	return
