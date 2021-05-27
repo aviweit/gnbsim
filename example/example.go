@@ -339,7 +339,7 @@ func runUPlane(gnb *ngap.GNB, ue *nas.UE, ctx context.Context,
 	log.Printf("QoS Flow ID: %d\n", gtpu.QosFlowID)
 
 	log.Printf("UE address: %v\n", ue.Recv.PDUAddress)
-	err := addIP(gnb.GTPuIFname, ue.Recv.PDUAddress, 28)
+	err := addIP(gnb.GTPuIFname, ue.Recv.PDUAddress, 24)
 	if err != nil {
 		log.Fatalf("failed to addIP: %v", err)
 		return
