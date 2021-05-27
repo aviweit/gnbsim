@@ -241,9 +241,8 @@ func (t *testSession) establishPDUSession(ue *nas.UE) {
 	return
 }
 
-func (t *testSession) setupN3Tunnel() (gtpConn *net.UDPConn, tun *netlink.Tuntap) {
+func setupN3Tunnel(gnb *ngap.GNB) (gtpConn *net.UDPConn, tun *netlink.Tuntap) {
 
-	gnb := t.gnb
 	log.Printf("GTP-U interface name: %s\n", gnb.GTPuIFname)
 	log.Printf("GTP-U local addr: %v\n", gnb.GTPuLocalAddr)
 	log.Printf("GTP-U peer addr : %v\n", gnb.Recv.GTPuPeerAddr)
@@ -318,20 +317,18 @@ func addRoute(tun *netlink.Tuntap) (err error) {
 	return
 }
 
-func (t *testSession) runUPlaneAll(
-	ctx context.Context, gtpConn *net.UDPConn, tun *netlink.Tuntap) {
-
-	for _, c := range t.gnb.Camper {
-		t.runUPlane(ctx, c, gtpConn, tun)
-	}
-	return
+//func (t *testSession) runUPlaneAll(
+//	ctx context.Context, gtpConn *net.UDPConn, tun *netlink.Tuntap) {
+//
+//	for _, c := range t.gnb.Camper {
+//		t.runUPlane(ctx, c, gtpConn, tun)
+//	}
+//	return
 }
 
-func (t *testSession) runUPlane(ctx context.Context, c *ngap.Camper,
+func runUPlane(gnb *ngap.GNB, ue *nas.UE, ctx context.Context,
 	gtpConn *net.UDPConn, tun *netlink.Tuntap) {
 
-	gnb := t.gnb
-	ue := c.UE
 	c.GTPu = gtp.NewGTP(gnb.GTPuTEID, gnb.Recv.GTPuPeerTEID)
 	gtpu := c.GTPu
 	gtpu.SetExtensionHeader(true)
@@ -356,7 +353,7 @@ func (t *testSession) runUPlane(ctx context.Context, c *ngap.Camper,
 
 	go t.decap(c, gtpConn, tun)
 	go t.encap(c, gtpConn, tun)
-	t.doUPlane(ctx, c)
+	// t.doUPlane(ctx, c)
 
 	/*
 		select {
@@ -535,22 +532,36 @@ func main() {
 	log.SetPrefix("[gnbsim]")
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
+	var gnb ngap.GNB
+	var ue nas.UE
+
+	ue.Recv.PDUAddress = net.IPv4(60, 60, 0, 13)
+
+	gnb.GTPuIFname = "gtp-gnb"
+	gnb.GTPuTEID = 17
+	gnb.Recv.GTPuPeerTEID = 1
+	gnb.GTPuLocalAddr = "192.168.10.2"  // 2nd address in up
+	gnb.Recv.GTPuPeerAddr = net.IPv4(192, 168, 10, 1) // 1st address in up
+
+
 	// usual testing
-	t := initRAN()
-	t.initUE()
+	//t := initRAN()
+	//t.initUE()
 
-	t.registrteAll()
-	time.Sleep(time.Second * 1)
+	//t.registrteAll()
+	//time.Sleep(time.Second * 1)
 
-	t.establishPDUSessionAll()
-	time.Sleep(time.Second * 1)
+	//t.establishPDUSessionAll()
+	//time.Sleep(time.Second * 1)
 
-	gtpConn, tun := t.setupN3Tunnel()
+	gtpConn, tun := setupN3Tunnel(&gnb)
 	time.Sleep(time.Second * 1)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	t.runUPlaneAll(ctx, gtpConn, tun)
+	//t.runUPlaneAll(ctx, gtpConn, tun)
+	runUPlane(&gnb, &ue, ctx, gtpConn, tun)
+
 	time.Sleep(time.Second * 1)
 
 	t.deregistrateAll()
