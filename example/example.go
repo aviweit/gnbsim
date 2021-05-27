@@ -372,6 +372,7 @@ func addIP(ifname string, ip net.IP, masklen int) (err error) {
 	}
 
 	addrs, err := netlink.AddrList(link, netlink.FAMILY_ALL)
+	fmt.Printf("addrs: %v", addrs)
 	if err != nil {
 		return err
 	}
@@ -555,17 +556,17 @@ func main() {
 	//time.Sleep(time.Second * 1)
 
 	gtpConn, tun := setupN3Tunnel(&gnb)
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 5)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//t.runUPlaneAll(ctx, gtpConn, tun)
 	runUPlane(&gnb, &ue, ctx, gtpConn, tun)
 
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 5)
 
 	//t.deregistrateAll()
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 5)
 
 	return
 }
